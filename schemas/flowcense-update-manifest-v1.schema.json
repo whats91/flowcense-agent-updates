@@ -1,0 +1,174 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/whats91/flowcense-agent-updates/main/schemas/flowcense-update-manifest-v1.schema.json",
+  "title": "FlowCense Windows Agent update manifest v1",
+  "oneOf": [
+    { "$ref": "#/$defs/noRelease" },
+    { "$ref": "#/$defs/release" }
+  ],
+  "$defs": {
+    "version": { "type": "string", "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)$", "maxLength": 32 },
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "assetName": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,159}$" },
+    "common": {
+      "type": "object",
+      "required": [ "schemaVersion", "state", "productId", "channel", "publishedUtc", "expiresUtc", "manifestKeyId" ],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "state": { "enum": [ "release", "noRelease" ] },
+        "productId": { "const": "flowcense-windows-agent" },
+        "channel": { "const": "stable" },
+        "publishedUtc": { "type": "string", "format": "date-time", "maxLength": 40 },
+        "expiresUtc": { "type": "string", "format": "date-time", "maxLength": 40 },
+        "manifestKeyId": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]{0,63}$" }
+      }
+    },
+    "noRelease": {
+      "allOf": [
+        { "$ref": "#/$defs/common" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [ "schemaVersion", "state", "productId", "channel", "publishedUtc", "expiresUtc", "manifestKeyId" ],
+          "properties": {
+            "schemaVersion": { "const": 1 },
+            "state": { "const": "noRelease" },
+            "productId": { "const": "flowcense-windows-agent" },
+            "channel": { "const": "stable" },
+            "publishedUtc": { "type": "string", "format": "date-time", "maxLength": 40 },
+            "expiresUtc": { "type": "string", "format": "date-time", "maxLength": 40 },
+            "manifestKeyId": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]{0,63}$" }
+          }
+        }
+      ]
+    },
+    "requiredPolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [ "isRequired", "reasonCode", "deadlineUtc" ],
+      "properties": {
+        "isRequired": { "type": "boolean" },
+        "reasonCode": { "type": [ "string", "null" ], "enum": [ null, "security", "compatibility", "service-continuity" ] },
+        "deadlineUtc": { "type": [ "string", "null" ], "format": "date-time", "maxLength": 40 }
+      }
+    },
+    "compatibility": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [ "targetSchemaVersion", "minimumReadableSchemaVersion", "maximumReadableSchemaVersion", "ipcMajor", "ipcMinor", "cloudContractSetSha256" ],
+      "properties": {
+        "targetSchemaVersion": { "type": "integer", "minimum": 1 },
+        "minimumReadableSchemaVersion": { "type": "integer", "minimum": 1 },
+        "maximumReadableSchemaVersion": { "type": "integer", "minimum": 1 },
+        "ipcMajor": { "type": "integer", "minimum": 1 },
+        "ipcMinor": { "type": "integer", "minimum": 0 },
+        "cloudContractSetSha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "package": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [ "kind", "sourceVersion", "sourceTreeSha256", "targetVersion", "assetName", "contentLength", "sha256", "compressedFormat", "expandedFileCount", "expandedBytes" ],
+      "properties": {
+        "kind": { "enum": [ "full-files", "changed-files" ] },
+        "sourceVersion": { "oneOf": [ { "$ref": "#/$defs/version" }, { "type": "null" } ] },
+        "sourceTreeSha256": { "oneOf": [ { "$ref": "#/$defs/sha256" }, { "type": "null" } ] },
+        "targetVersion": { "$ref": "#/$defs/version" },
+        "assetName": { "$ref": "#/$defs/assetName" },
+        "contentLength": { "type": "integer", "minimum": 1 },
+        "sha256": { "$ref": "#/$defs/sha256" },
+        "compressedFormat": { "const": "zip" },
+        "expandedFileCount": { "type": "integer", "minimum": 0 },
+        "expandedBytes": { "type": "integer", "minimum": 0 }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "kind": { "const": "full-files" } } },
+          "then": { "properties": { "sourceVersion": { "type": "null" }, "sourceTreeSha256": { "type": "null" } } }
+        },
+        {
+          "if": { "properties": { "kind": { "const": "changed-files" } } },
+          "then": { "properties": { "sourceVersion": { "$ref": "#/$defs/version" }, "sourceTreeSha256": { "$ref": "#/$defs/sha256" } } }
+        }
+      ]
+    },
+    "file": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [ "path", "size", "sha256", "component", "executable", "authenticodePolicy" ],
+      "properties": {
+        "path": { "type": "string", "pattern": "^(Service|Desktop|ChromeDomainHost|Launcher)/[^/]+(?:/[^/]+)*$|^Updater/[0-9]+\\.[0-9]+\\.[0-9]+/[^/]+(?:/[^/]+)*$", "maxLength": 300 },
+        "size": { "type": "integer", "minimum": 0 },
+        "sha256": { "$ref": "#/$defs/sha256" },
+        "component": { "enum": [ "Service", "Desktop", "ChromeDomainHost", "Launcher", "Updater" ] },
+        "executable": { "type": "boolean" },
+        "authenticodePolicy": { "const": "unsigned-allowed-v1" }
+      }
+    },
+    "fileSet": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [ "treeSha256", "fileCount", "totalBytes", "files" ],
+      "properties": {
+        "treeSha256": { "$ref": "#/$defs/sha256" },
+        "fileCount": { "type": "integer", "minimum": 1 },
+        "totalBytes": { "type": "integer", "minimum": 1 },
+        "files": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/file" } }
+      }
+    },
+    "activation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [ "restartService", "launchDesktopWhenInteractive", "healthContract" ],
+      "properties": {
+        "restartService": { "const": true },
+        "launchDesktopWhenInteractive": { "const": true },
+        "healthContract": { "const": "flowcense-health-v1" }
+      }
+    },
+    "asset": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [ "assetName", "contentLength", "sha256" ],
+      "properties": {
+        "assetName": { "$ref": "#/$defs/assetName" },
+        "contentLength": { "type": "integer", "minimum": 1 },
+        "sha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "release": {
+      "allOf": [
+        { "$ref": "#/$defs/common" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [ "schemaVersion", "state", "productId", "channel", "releaseId", "sequence", "version", "publishedUtc", "expiresUtc", "architecture", "updateMode", "minimumSupportedPreviousVersion", "minimumUpdaterVersion", "required", "compatibility", "packages", "fileSet", "mutableDataPolicy", "activation", "installerFallback", "releaseNotes", "manifestKeyId" ],
+          "properties": {
+            "schemaVersion": { "const": 1 },
+            "state": { "const": "release" },
+            "productId": { "const": "flowcense-windows-agent" },
+            "channel": { "const": "stable" },
+            "releaseId": { "type": "string", "pattern": "^stable-[0-9]{8}$" },
+            "sequence": { "type": "integer", "minimum": 1 },
+            "version": { "$ref": "#/$defs/version" },
+            "publishedUtc": { "type": "string", "format": "date-time", "maxLength": 40 },
+            "expiresUtc": { "type": "string", "format": "date-time", "maxLength": 40 },
+            "architecture": { "const": "win-x64" },
+            "updateMode": { "enum": [ "file-set", "installer-required" ] },
+            "minimumSupportedPreviousVersion": { "$ref": "#/$defs/version" },
+            "minimumUpdaterVersion": { "$ref": "#/$defs/version" },
+            "required": { "$ref": "#/$defs/requiredPolicy" },
+            "compatibility": { "$ref": "#/$defs/compatibility" },
+            "packages": { "type": "array", "minItems": 1, "maxItems": 2, "items": { "$ref": "#/$defs/package" } },
+            "fileSet": { "$ref": "#/$defs/fileSet" },
+            "mutableDataPolicy": { "const": "preserve-v1" },
+            "activation": { "$ref": "#/$defs/activation" },
+            "installerFallback": { "$ref": "#/$defs/asset" },
+            "releaseNotes": { "$ref": "#/$defs/asset" },
+            "manifestKeyId": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]{0,63}$" }
+          }
+        }
+      ]
+    }
+  }
+}

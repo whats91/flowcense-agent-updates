@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "state": "noRelease",
+  "productId": "flowcense-windows-agent",
+  "channel": "stable",
+  "publishedUtc": "2026-09-07T08:39:00Z",
+  "expiresUtc": "2027-09-08T08:39:00Z",
+  "manifestKeyId": "flowcense-prod-2026-09-53e399d530a1"
+}
