@@ -2,6 +2,6 @@
   "schemaVersion": 1,
   "keyId": "flowcense-prod-2026-09-53e399d530a1",
   "algorithm": "ecdsa-p256-sha256-der",
-  "manifestSha256": "e4ef37a146fdf5561468430eb84011578502ece704a8329c754bcb62154071cc",
-  "signature": "MEUCIF6kC+wG/e1m+5gVhyjLufXaE3SuAlEML+UMCxqdjJ38AiEAwSdfYoY7lOJHCjNEvAr5hq7ejr33IAx1RJaArE/Uel0="
+  "manifestSha256": "27e8d83b5a4f09f8f7659a37e01c7b20b169fe2bab03064e3d0af07391e92a7a",
+  "signature": "MEYCIQDQKP+F8p3T9lZnndfDv2GPwnMRh2yHF+cWtJQ2vKF0IwIhAOpKlDcB2lTGT7FoEbaKE+kes0BARTVBnXVtlaj/b6Tw"
 }
